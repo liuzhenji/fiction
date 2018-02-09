@@ -1,0 +1,280 @@
+<style>
+.charge-userinfo-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 15rpx 25rpx;
+}
+
+.userinfo-account-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.userinfo-balance-container {
+    margin-top: 10rpx;
+    display: flex;
+    flex-direction: row;
+}
+
+.userinfo-title-text {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.userinfo-content-text {
+    margin-left: 25rpx;
+    font-size: 12px;
+}
+
+.charge-detail-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 25rpx;
+}
+
+.detail-title-container {
+    margin-top: 20rpx;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.detail-title-text {
+    margin-left: 5rpx;
+}
+
+.detail-tip-text {
+    color: red;
+    font-size: 8px;
+}
+
+.detail-item-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.item-container {
+    position: relative;
+    width: 300rpx;
+    min-height: 125rpx;
+    margin-top: 20rpx;
+    display: flex;
+    flex-direction: column;
+    padding: 15rpx 0 0 25rpx;
+    box-sizing: border-box;
+    border:1px solid #eee;
+}
+
+.item-price {
+  display: flex;
+  flex-direction: row;
+  font-size: 10px;
+  justify-content: space-between;
+}
+
+.item-price-price {
+  font-weight: bold;
+  font-size:35rpx;
+}
+
+.item-price-bonus {
+  color: white;
+  background-color: red;
+  border-radius: 1em 0 0 1em;
+  padding: 0.05em 0.2em 0.05em 0.8em;
+  height:1.5em;
+  font-size:9px;
+}
+
+.item-balance {
+  font-size: 10px;
+}
+
+.item-balance-bonus {
+  color: red;
+}
+
+.item-checked-container {
+  position:absolute;
+  right:0%;
+  bottom:0%;
+  width:36rpx;
+  height:36rpx;
+  background-color:rgb(24, 144, 255);
+  border-radius:36rpx 0 0 0
+}
+
+.item-checked {
+  width:70%;
+  height:70%;
+  right:7%;
+  bottom:9%;
+  text-align:center;
+  position:absolute;
+}
+
+.detail-submit-container {
+    padding: 70rpx 0rpx 30rpx 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.submit-button {
+    width: 75%;
+    height: 2.5em;
+    border-radius: 1.25em;    
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    background-color: rgb(24, 144, 255);
+}
+
+.detail-tips-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.tips-title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 35rpx 0 15rpx 0;
+}
+
+.detail-content-text {
+  font-size: 12px;
+}
+</style>
+
+<template lang='xml'>
+<view>
+  <view class="charge-userinfo-container">
+    <view class="userinfo-account-container">
+      <text class='userinfo-title-text'>用户昵称</text>
+      <text class='userinfo-content-text'>Aaron</text>
+    </view>
+    <view class="userinfo-balance-container">
+      <text class='userinfo-title-text'>用户余额</text>
+      <text class='userinfo-content-text'>{{balance}}{{unit}}</text>
+    </view>
+  </view>
+  <view class="separate-line-20"/>
+  <view class="charge-detail-container">
+    <view class="detail-title-container">
+      <view class='blue-block'></view>
+      <text class='detail-title-text'>微信支付</text>
+      <text class='detail-tip-text'>（1元=100看点）</text>
+    </view>
+    <radio-group class='detail-item-container' @change='onRadioChange'>
+      <repeat for='{{chargeTypes}}' key='{{index}}'>
+        <label>
+          <radio hidden value='{{index}}'/>
+          <view class="item-container" style='border-color:{{index==checkedIndex ? checkedBorderColor : uncheckedBorderColor}}'>
+            <view class='item-price'>
+              <view class='item-price-price'>
+                {{item.price}}元
+              </view>
+              <view wx:if='{{item.bonusType}}' class='item-price-bonus'>
+                送{{item.bonusType.price}}元
+              </view>
+            </view>
+            <view class='item-balance'>
+              {{item.balance}}{{unit}} <span wx:if='{{item.bonusType}}' class='item-balance-bonus'>送{{item.bonusType.price * 100}}{{unit}}</span>
+            </view>
+            <view wx:if='{{index==checkedIndex}}' class='item-checked-container'>
+              <image class='item-checked' mode='aspectFill' src='../../resources/checked.png'/>
+            </view>
+          </view>
+        </label>
+      </repeat>
+    </radio-group>
+    <view class="detail-submit-container">
+      <button class="submit-button" @tap.stop='tapChargeBtn'>立刻充值：{{chargeTypes[checkedIndex].price}}元</button>
+    </view>
+    <view class="detail-tips-container">
+      <view class="tips-title-container">
+        <view class="blue-block"></view>
+            <text class='detail-title-text'>温馨的小提示</text>
+        </view>
+        <text class='detail-content-text'>1.充值获得的看点仅限在本公司书城使用</text>
+        <text class='detail-content-text'>2.若是发现充值未到账，请先确认你登录的账号与充值的账号是否一致。</text>
+        <text class='detail-content-text'>3.用户一旦充值成功，不得已任何理由要求本公司退还全部或部分已充值款项，因不可抗力或本公司单方面原因导致的情况除外。</text>
+        <text class='detail-content-text'>4.充值到账存在延迟。如24小时内未到账请与客服联系。客服电话：18792576775</text>
+      </view>
+    </view>
+  </view>
+</view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import utils from '@/utils/util';
+
+export default class Charge extends wepy.page {
+  data = {
+    chargeTypes: new Array(),
+    checkedIndex: 0,
+    checkedBorderColor: '#2196F3',
+    uncheckedBorderColor: '#eee',
+    balance: null,
+    unit: utils.unit
+  };
+
+  methods = {
+    onRadioChange(e) {
+      this.checkedIndex = e.detail.value;
+      this.$apply();
+    },
+    async tapChargeBtn() {
+      //唤起微信支付功能
+      //充值记录
+      let chargeType = this.chargeTypes[this.checkedIndex];
+      let { data } = await utils.post({
+        url: `${utils.urlPrefix}/chargeproducts`,
+        data: {
+          chargeTypeId: chargeType.id
+        }
+      });
+      console.log(data);
+      if (data) {
+        wepy.showToast({
+          title: '充值成功'
+        });
+        //更新本地用户余额
+        let session = wepy.getStorageSync('session');
+        session.user.balance += (chargeType.balance + (chargeType.bonusType ? chargeType.bonusType.price * utils.ratio : 0));
+        wepy.setStorageSync('session', session);
+        this.balance = session.user.balance;
+        this.$apply();
+      }
+    }
+  };
+
+  onLoad() {
+    this.balance = wepy.getStorageSync('session').user.balance;
+    this.$apply();
+    this._loadChargeTypes();
+  }
+
+  /**
+   * 加载充值产品列表
+   */
+  async _loadChargeTypes() {
+    let { data } = await utils.fetch({
+      url: `${utils.urlPrefix}/chargetypes`
+    });
+    if (data.result) {
+      this.chargeTypes = data.result;
+      this.$apply();
+    }
+  }
+}
+</script>
+
+

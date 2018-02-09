@@ -1,0 +1,175 @@
+<style>
+  page {
+    background-color: #eee;
+  }
+  
+  .userinfo-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: white;
+  }
+  
+  .userinfo-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .userinfo-avatar {
+    width: 128rpx;
+    height: 128rpx;
+    margin: 20rpx;
+    border-radius: 50%;
+  }
+  
+
+  .userinfo-money {
+    font-size: 12px;
+    color: #aaa;
+  }
+  
+  .usermotto {
+    margin-top: 200px;
+  }
+  .list-container {
+    margin-top: 20rpx;
+    background-color: white;
+  }
+  
+  .list-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 65rpx;
+    padding: 15rpx 25rpx 15rpx 25rpx;
+  }
+  .list-item-text {
+    flex-grow: 2;
+    padding-left: 15rpx;
+    font-size: 14px;
+  }
+
+  .list-item-image {
+    height: 50rpx;
+    width: 50rpx;
+  }
+
+  .list-item-icon {
+    height: 30rpx;
+    width: 30rpx;
+  }
+</style>
+<template lang='pug'>
+  <view>
+    <view wx:if='{{checkMode}}'>
+      <view class='userinfo-container'>
+        <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
+      </view>
+      <view class='list-container'>
+        <view class='list-item'>
+          <image class='list-item-image' src='../resources/charge.png'/>
+          <text class='list-item-text'>充值咨询币</text>
+          <image class='list-item-icon' src='../resources/go.png'/>
+        </view>
+        <view class='separate-line-1 padding-h-25'></view>
+      </view>
+    </view>
+    <view wx:else>
+      <view class="userinfo-container">
+        <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
+        <view class="userinfo-content">
+          <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+          <text class="userinfo-money">余额:{{balance}} {{unit}}</text>
+        </view>
+      </view>
+      <view class='list-container'>
+        <view class='list-item' @tap.stop='tapCharge'>
+          <image class='list-item-image' src='../resources/charge.png'/>
+          <text class='list-item-text'>充值</text>
+          <image class='list-item-icon' src='../resources/go.png'/>
+        </view>
+        <view class='separate-line-1 padding-h-25'></view>
+        <view class='list-item' @tap.stop='tapChargeRecord'>
+          <image class='list-item-image' src='../resources/history.png'/>
+          <text class='list-item-text'>充值记录</text>
+          <image class='list-item-icon' src='../resources/go.png'/>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy';
+  import utils from '@/utils/util';
+
+  export default class Me extends wepy.page {
+    data = {
+      checkMode: true,
+      userInfo: new Object(),
+      hasUserInfo: false,
+      // canIUse: wepy.canIUse('button.open-type.getUserInfo'),
+      balance: 0,
+      unit: utils.unit
+    };
+
+    methods = {
+      tapChargeRecord() {
+        wepy.navigateTo({
+          url: './ChargeRecord'
+        });
+      },
+      tapCharge() {
+        wepy.navigateTo({
+          url: './Charge'
+        });
+      }
+    };
+
+    async onShow() {
+      wepy.showLoading();
+      await this._init();
+      await this._loadUserInfoFrom3rd();
+      wepy.hideLoading();
+    }
+
+    async _loadUserInfoFrom3rd() {
+      let { data } = await utils.fetch({
+        url: `${utils.urlPrefix}/users`
+      });
+      if (data.result) {
+        let session = wepy.getStorageSync('session');
+        wepy.setStorageSync('session', {...session, user: data.result[0]});
+        this.balance = data.result[0].balance;
+        this.$apply();
+      }
+    }
+
+    async _init() {
+      //加载微信用户的基础信息
+      //todo:考虑用户没有授权用户信息等情况
+      if (!this.$parent.globalData.userInfo) {
+        this.$parent.loadUserInfoCallback = (userInfo) => {
+          this.userInfo = userInfo;
+          this.$apply();
+        };
+      } else {
+        this.userInfo = this.$parent.globalData.userInfo;
+        this.$apply();
+      }
+      let checkRet = await utils.fetch({
+        url: `${utils.urlPrefix}/systemconfigs/1`
+      });
+      //审核模式
+      if (checkRet.data === 1) {
+        this.checkMode = true;
+        this.$apply();
+        return new Promise((resolve, reject) => {
+          resolve();
+        });
+      }
+      this.checkMode = false;
+      this.$apply();
+    }
+  }
+</script>

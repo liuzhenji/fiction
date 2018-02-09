@@ -1,0 +1,57 @@
+
+<view>
+  <view class="charge-userinfo-container">
+    <view class="userinfo-account-container">
+      <text class="userinfo-title-text">用户昵称</text>
+      <text class="userinfo-content-text">Aaron</text>
+    </view>
+    <view class="userinfo-balance-container">
+      <text class="userinfo-title-text">用户余额</text>
+      <text class="userinfo-content-text">{{balance}}{{unit}}</text>
+    </view>
+  </view>
+  <view class="separate-line-20"/>
+  <view class="charge-detail-container">
+    <view class="detail-title-container">
+      <view class="blue-block"/>
+      <text class="detail-title-text">微信支付</text>
+      <text class="detail-tip-text">（1元=100看点）</text>
+    </view>
+    <radio-group class="detail-item-container" bindchange="onRadioChange">
+      <block wx:for="{{chargeTypes}}" wx:for-index="index" wx:for-item="item" wx:key="{{index}}">
+        <label>
+          <radio hidden value="{{index}}"/>
+          <view class="item-container" style="border-color:{{index==checkedIndex ? checkedBorderColor : uncheckedBorderColor}}">
+            <view class="item-price">
+              <view class="item-price-price">
+                {{item.price}}元
+              </view>
+              <view  wx:if="{{item.bonusType}}" class="item-price-bonus">
+                送{{item.bonusType.price}}元
+              </view>
+            </view>
+            <view class="item-balance">
+              {{item.balance}}{{unit}} <span  wx:if="{{item.bonusType}}" class="item-balance-bonus">送{{item.bonusType.price * 100}}{{unit}}</span>
+            </view>
+            <view wx:if="{{index==checkedIndex}}" class="item-checked-container">
+              <image class="item-checked" mode="aspectFill" src="../../resources/checked.png"/>
+            </view>
+          </view>
+        </label>
+      </block>
+    </radio-group>
+    <view class="detail-submit-container">
+      <button class="submit-button" catchtap="tapChargeBtn">立刻充值：{{chargeTypes[checkedIndex].price}}元</button>
+    </view>
+    <view class="detail-tips-container">
+      <view class="tips-title-container">
+        <view class="blue-block"/>
+            <text class="detail-title-text">温馨的小提示</text>
+        </view>
+        <text class="detail-content-text">1.充值获得的看点仅限在本公司书城使用</text>
+        <text class="detail-content-text">2.若是发现充值未到账，请先确认你登录的账号与充值的账号是否一致。</text>
+        <text class="detail-content-text">3.用户一旦充值成功，不得已任何理由要求本公司退还全部或部分已充值款项，因不可抗力或本公司单方面原因导致的情况除外。</text>
+        <text class="detail-content-text">4.充值到账存在延迟。如24小时内未到账请与客服联系。客服电话：18792576775</text>
+      </view>
+    </view>
+  </view>

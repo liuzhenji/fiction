@@ -1,0 +1,319 @@
+<style>
+  page {
+    background-color: rgb(202, 183, 158);
+  }
+
+  .read-content-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 25rpx;
+  }
+
+  .content-title {
+    font-size: 18px;
+  }
+
+  .content-tip {
+    font-size: 11px;
+    padding: 5rpx 0;
+    color: rgb(129, 117, 114);
+  }
+
+  .content-content {
+    margin-top: 35rpx;
+  }
+
+  .read-charge-container {
+    padding: 0 25rpx;
+  }
+
+  .charge-button {
+    width: 75%;
+    height: 2.5em;
+    border-radius: 1.25em;    
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    background-color: rgb(24, 144, 255);
+    margin-top: 55rpx;
+  }
+
+  .read-controller-container {
+    display: flex;
+    flex-direction: column;
+    padding: 25rpx 0rpx 0 25rpx;
+  }
+
+  .controller-other {
+    color: rgb(24, 144, 255);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 15rpx;
+  }
+
+  .controller-button {
+    width: 75%;
+    height: 2.5em;
+    border-radius: 1.25em;    
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    background-color: rgb(24, 144, 255);
+  }
+
+  .blue-line-v {
+    width: 1px;
+    height: 1em;
+    background-color: rgb(24, 144, 255);
+  }
+
+  .read-modal-container {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 3em;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25rpx;
+  }
+
+  .read-modal-catalog {
+    width: 35rpx;
+    height: 35rpx;
+  }
+
+  .read-modal-next {
+    color: white;
+    font-size: 13px;
+  }
+</style>
+
+<template lang='pug'>
+  <view>
+    <view wx:if='{{!needToCharge}}' @tap.stop='tapContent'>
+      <view class='read-content-container'>
+          <text class='content-title'>{{content.chapter.title}}</text>
+          <text class='content-content'>{{content.content}}</text>
+      </view>
+      <view class='read-controller-container'>
+          <button @tap.stop='tapNext' class='controller-button'>下一章</button>
+          <view class='controller-other'>
+              <view @tap.stop='tapLast'>上一章</view>
+              <view class='blue-line-v'/>
+              <view @tap.stop='tapCatalog'>目录</view>
+          </view>
+      </view>
+      <!-- 目录弹出框 -->
+      <view wx:if='{{catalogModal}}' class='read-modal-container'>
+          <view @tap.stop='tapCatalog'>
+            <image class='read-modal-catalog' src='../../resources/catalog.png' mode='aspectFill'/>
+          </view>
+          <view class='read-modal-next' @tap.stop='tapNext'>下一章</view>
+      </view>
+    </view>
+    <view wx:else class='read-charge-container'>
+      <view class='content-title'>{{chapter.title}}</view>
+      <view class='content-tip'>本章价格  {{chapter.costBalance}}{{unit}}</view>
+      <view class='content-tip'>当前余额  {{userInfo.balance}}{{unit}}</view>
+      <button class='charge-button' @tap.stop='tapChargeBtn'>充值</button>
+    </view>
+  </view>
+</template>
+
+
+<script>
+  import wepy from 'wepy';
+  import utils from '@/utils/util';
+
+  export default class Read extends wepy.page {
+    config = {
+      navigationBarTitleText: 'Read',
+      navigationBarBackgroundColor: '#cab79e',
+      backgroundColor: '#cab79e'
+    };
+
+    data = {
+      unit: utils.unit,
+      userInfo: wepy.getStorageSync('session').user,
+      chapter: null,
+      ficId: null,
+      serial: null,
+      content: new Object(),
+      needToCharge: false,
+      catalogModal: false
+    };
+
+    methods = {
+
+      /**
+       * 点击充值按键
+       */
+      tapChargeBtn() {
+        this.catalogModal = false;
+        this.$apply();
+        wepy.navigateTo({
+          url: './Charge'
+        });
+      },
+      /**
+       * 点击小说内容
+       */
+      tapContent() {
+        this.catalogModal = !this.catalogModal;
+        this.$apply();
+      },
+      /**
+       * 点击目录按键
+       */
+      tapCatalog() {
+        this.catalogModal = false;
+        this.$apply();
+        wepy.navigateTo({
+          url: './Catalog'
+        });
+      },
+      /**
+       * 点击下一章
+       */
+      tapNext() {
+        this._loadContent({
+          ficId: this.data.ficId,
+          serial: this.data.serial + 1
+        });
+      },
+      /**
+       * 点击上一章
+       */
+      tapLast() {
+        if (this.data.serial === 1) {
+          wepy.showToast({
+            title: '已经是第一章'
+          });
+          return;
+        }
+        this._loadContent({
+          ficId: this.data.ficId,
+          serial: this.data.serial - 1
+        });
+      }
+    };
+
+    async onShow() {
+      console.log(getCurrentPages());
+      let ficId = this.$parent.globalData.ficId;
+      let chapId = this.$parent.globalData.chapId;
+      let serial = this.$parent.globalData.serial;
+      //发起请求获取小说内容
+      await this._loadContent({ ficId: ficId, chapId: chapId, serial: serial });
+    }
+
+    async _loadContent({ ficId, chapId, serial }) {
+      try {
+        //显示title loading
+        await wepy.showNavigationBarLoading();
+        let params = new Object();
+        if (ficId) {
+          params.ficId = ficId;
+        }
+        if (chapId) {
+          params.chapId = chapId;
+        }
+        if (serial) {
+          params.serial = serial;
+        }
+        let contentRet = await utils.fetch({
+          url: `${utils.urlPrefix}/contents`,
+          data: params
+        });
+        //章节不可看
+        if (contentRet.data.head && contentRet.data.head.code === '0005') {
+          this.ficId = contentRet.data.body.chapter.ficId;
+          this.title = contentRet.data.body.chapter.title;
+          this.chapter = contentRet.data.body.chapter;
+          this.$apply();
+          if (this.userInfo.balance >= contentRet.data.body.chapter.costBalance) {
+            let modalRet = await wepy.showModal({
+              content: `当前章节需支付${contentRet.data.body.chapter.costBalance}看点`,
+              confirmText: '支付'
+            });
+            if (modalRet && modalRet.confirm) {
+              //购买章节
+              await this._purchaseChapter(contentRet.data.body.chapter.id);
+            } else {
+              console.log('用户取消购买章节');
+            }
+            return new Promise((resolve, reject) => {
+              resolve();
+            });
+          }
+          //需要充值
+          this.needToCharge = true;
+          this.$apply();
+          return new Promise((resolve, reject) => {
+            resolve();
+          });
+        }
+        //判断是否最后章节
+        if (contentRet.data.result === undefined) {
+          wepy.showToast({
+            title: '已经是最后一章'
+          });
+          return new Promise((resolve, reject) => {
+            resolve();
+          });
+        }
+        //刷新数据
+        this.needToCharge = false;
+        this.content = contentRet.data.result[0];
+        this.chapter = contentRet.data.result[0].chapter;
+        this.serial = contentRet.data.result[0].chapter.serial;
+        this.ficId = contentRet.data.result[0].fiction.id;
+        this.$apply();
+        //修改barTitle
+        wepy.setNavigationBarTitle({
+          title: contentRet.data.result[0].chapter.title
+        });
+        //同步全局章节记录
+        this.$parent.globalData.ficId = contentRet.data.result[0].fiction.id;
+        this.$parent.globalData.chapId = contentRet.data.result[0].chapter.id;
+        this.$parent.globalData.serial = contentRet.data.result[0].chapter.serial;
+        return new Promise((resolve, reject) => {
+          resolve();
+        });
+      } catch (e) {
+        console.log(e);
+      } finally {
+        await wepy.hideNavigationBarLoading();
+        this.catalogModal = false;
+        this.$apply();
+      }
+    }
+
+    /**
+    * 购买章节
+    */
+    async _purchaseChapter(chapId) {
+      try {
+        await utils.post({
+          url: `${utils.urlPrefix}/userassets`,
+          data: {
+            chapId
+          }
+        });
+        await wepy.showToast({
+          title: '购买成功!'
+        });
+        await this._loadContent(this.$parent.globalData.ficId, chapId);
+      } catch (err) {
+        console.log('购买章节发生异常');
+      }
+    }
+  }
+</script>
+

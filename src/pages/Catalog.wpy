@@ -1,0 +1,109 @@
+<style>
+.title-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding:0 25rpx;
+}
+
+.catalog-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 25rpx;
+}
+
+.item-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.item-vip {
+    color: red;
+    font-weight: bold;
+}
+.item-title {
+    padding: 25rpx 0;
+}
+</style>
+
+<template lang='pug'>
+<view>
+  <view class='title-container'>
+    <text>共{{total}}章</text>
+    <picker range='{{range}}' @change='bindPickerChange' value='{{rangeIndex}}'>
+      <view>
+        <text>当前选择：</text>{{range[rangeIndex]}}
+      </view>
+    </picker>
+  </view>
+  <view class='separate-line-1'/>
+  <view class='catalog-container'>
+    <repeat for='{{chapters}}' key='{{index}}'>
+      <view @tap.stop='tapChapter({{item.id}})'>
+        <view class='item-container'>
+          <view class='item-title'>{{item.title}}</view>
+        </view>
+        <view class='separate-line-1'/>   
+      </view>
+    </repeat>
+  </view>
+</view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import utils from '@/utils/util';
+export default class Catalog extends wepy.page {
+  config = {
+    navigationBarTitleText: '目录'
+  }
+
+  data = {
+    chapters: new Array(),
+    total: 0,
+    range: new Array(),
+    rangeIndex: 0,
+    pageSize: 100,
+    pageNum: 1
+  }
+
+  methods = {
+    tapChapter(chapId) {
+      this.$parent.globalData.chapId = chapId;
+      this.$parent.globalData.serial = null;
+      wepy.navigateBack({});
+    }
+  }
+
+  onLoad() {
+    let ficId = this.$parent.globalData.ficId;
+    this._loadCatalogs(ficId, this.pageNum, this.pageSize);
+  }
+
+  async _loadCatalogs(ficId, pageNum, pageSize) {
+    let { data } = await utils.fetch({
+      url: `${utils.urlPrefix}/chapters`,
+      data: {
+        ficId,
+        pageNum,
+        pageSize
+      }
+    });
+    if (data.result) {
+      let range = new Array();
+      let loop = Math.ceil(data.total / this.pageSize);
+      let start = 0;
+      for (let index = 0; index < loop; index++) {
+        let end = start + pageSize > data.total ? data.total : start + pageSize;
+        range.push(`第 ${start + 1} - ${end} 章节`);
+        start = end;
+      }
+      this.range = range;
+      this.total = data.total;
+      this.chapters = data.result;
+      this.$apply();
+    }
+  }
+}
+</script>

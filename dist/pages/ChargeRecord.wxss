@@ -1,0 +1,35 @@
+
+.record-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.content-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 25rpx 25rpx 20rpx 25rpx;
+}
+
+.content-desc {
+    font-size: 12px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.content-date {
+    font-size: 9px;
+}
+
+.no-more {
+    display: flex;
+    justify-content: center;
+    margin: 30rpx 0;
+}

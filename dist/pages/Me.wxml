@@ -1,0 +1,37 @@
+<view>
+<view  wx:if="{{checkMode}}">
+<view class="userinfo-container">
+<image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"/>
+</view>
+<view class="list-container">
+<view class="list-item">
+<image class="list-item-image" src="../resources/charge.png"/>
+<text class="list-item-text">充值咨询币</text>
+<image class="list-item-icon" src="../resources/go.png"/>
+</view>
+<view class="separate-line-1 padding-h-25"/>
+</view>
+</view>
+<view  wx:else>
+<view class="userinfo-container">
+<image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"/>
+<view class="userinfo-content">
+<text class="userinfo-nickname">{{userInfo.nickName}}</text>
+<text class="userinfo-money">余额:{{balance}} {{unit}}</text>
+</view>
+</view>
+<view class="list-container">
+<view class="list-item" catchtap="tapCharge">
+<image class="list-item-image" src="../resources/charge.png"/>
+<text class="list-item-text">充值</text>
+<image class="list-item-icon" src="../resources/go.png"/>
+</view>
+<view class="separate-line-1 padding-h-25"/>
+<view class="list-item" catchtap="tapChargeRecord">
+<image class="list-item-image" src="../resources/history.png"/>
+<text class="list-item-text">充值记录</text>
+<image class="list-item-icon" src="../resources/go.png"/>
+</view>
+</view>
+</view>
+</view>
