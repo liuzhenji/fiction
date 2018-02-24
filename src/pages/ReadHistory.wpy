@@ -19,7 +19,7 @@
   
   .image-container {
     width: 25%;
-    height: 230rpx;
+    min-height: 230rpx;
   }
   
   .image-desc {
@@ -66,7 +66,8 @@
           </view>
           <view class='content-container'>
             <text class='content-title'>{{item.fiction.title}}</text>
-            <text class='content-artist'>作者 {{item.fiction.artist}}</text>
+            <text class='content-artist'>{{item.fiction.artist}}</text>
+            <text class='content-last-read'>更新至 {{item.fiction.latestChap.title}}</text>
             <text class='content-last-read'>上次读到 {{item.chapter.title}}</text>
           </view>
         </view>

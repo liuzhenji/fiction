@@ -12,9 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "lodash": "^4.17.4",
+    "moment": "^2.20.1",
     "wepy": "^1.7.0",
-    "wepy-async-function": "^1.4.5",
-    "wepy-com-toast": "^1.0.3"
+    "wepy-async-function": "^1.4.5"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.1",

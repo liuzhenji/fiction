@@ -9,15 +9,6 @@
   padding: 200rpx 0;
   box-sizing: border-box;
 }
-
-// .container {
-//   height: 100%;
-//   display: flex;
-//   flex-direction: column;
-//   align-items: center;
-//   justify-content: space-between;
-//   box-sizing: border-box;
-// }
  
 .container {
   padding: 25rpx 25rpx 0rpx 25rpx;
@@ -55,6 +46,7 @@
 import wepy from 'wepy';
 import 'wepy-async-function';
 import utils from './utils/util';
+import moment from 'moment';
 
 export default class extends wepy.app {
   config = {
@@ -133,31 +125,61 @@ export default class extends wepy.app {
     });
   }
 
-  onLaunch() {
-    //建立会话放到show周期中
+  onShareAppMessage(options) {
+    const openid = wepy.getStorageSync('session').user.openid;
+    const timeStamp = moment(Date.now()).format('YYYY-MM-DDTHH:mm:ss.sss');
+    return {
+      path: `/pages/Index?fromOpenid=${openid}&shareDate=${timeStamp}`
+    };
   }
 
-  async onShow() {
-    //检查会话，发起会话
+  onLaunch(options) {
+    //开启分享设置
+    wepy.showShareMenu({
+      withShareTicket: true
+    });
+  }
+
+  async onShow(options) {
+    //开启初始化蒙版
+    wepy.showLoading({
+      title: '初始化信息',
+      mask: true
+    });
     try {
-      //开启初始化蒙版
-      await wepy.showLoading({
-        title: '初始化信息',
-        mask: true
-      });
       //校验会话
       await wepy.checkSession();
-      //会话超时
     } catch (e) {
+      //建立新会话
       await this._createSession();
+      //发起用户来源数据统计
+      await this._statUserSource(options);
     } finally {
-      //获取微信用户信息
-      await this._loadUserInfo();
       //同步用户信息到3rd server
+      await this._loadUserInfo();
       await this._syncUserInfo();
       //关闭初始化蒙版
       await wepy.hideLoading();
     }
+  }
+
+  async _statUserSource(options) {
+    await utils.post({
+      url: `${utils.urlPrefix}/stat/usersources`,
+      data: utils.convertO2O(
+        options,
+        {
+          referrerInfo: {
+            refAppid: val => {
+              return val.appId;
+            }
+          }
+        },
+        {
+          ...options.query
+        }
+      )
+    });
   }
 
   _createSession() {
@@ -176,19 +198,37 @@ export default class extends wepy.app {
   /**
    * 获取微信用户信息
    */
-  _loadUserInfo() {
+  async _loadUserInfo() {
+    //已经获取过用户信息
     if (this.globalData.userInfo) {
-      return new Promise((resolve, reject) => {
-        resolve();
-      });
+      return;
     }
-    return wepy.getUserInfo().then((res) => {
-      this.globalData.userInfo = res.userInfo;
-      //防止getUserInfo返回过晚
-      if (this.loadUserInfoCallback) {
-        this.loadUserInfoCallback(res.userInfo);
+    //用户授权情况
+    const setting = await wepy.getSetting();
+    if (!setting.authSetting['scope.userInfo']) {
+      try {
+        await wepy.authorize({
+          scope: 'scope.userInfo'
+        });
+      } catch (err) {
+        await wepy.hideLoading();
+        const ret = await wepy.showModal({
+          title: '警告',
+          content: '若不进行授权，本程序将不能正常运行。届时，您需要在微信【发现】-【小程序】-删掉该程序，重新搜索授权登录方可使用。'
+        });
+        if (ret.cancel) {
+          return;
+        }
+        //打开授权框
+        await wepy.openSetting();
       }
-    });
+    }
+    const userInfoRet = await wepy.getUserInfo();
+    this.globalData.userInfo = userInfoRet.userInfo;
+    //防止getUserInfo返回过晚
+    if (this.loadUserInfoCallback) {
+      this.loadUserInfoCallback(userInfoRet.userInfo);
+    }
   }
 
   /**
@@ -196,6 +236,9 @@ export default class extends wepy.app {
    */
   _syncUserInfo() {
     const userInfo = this.globalData.userInfo;
+    if (!userInfo) {
+      return;
+    }
     return utils.post({
       url: `${utils.urlPrefix}/users`,
       data: {
@@ -207,7 +250,7 @@ export default class extends wepy.app {
         country: userInfo.country,
         language: userInfo.language
       }
-    }).catch((err) => {
+    }).catch(err => {
       //todo:输出到日志
     });
   }

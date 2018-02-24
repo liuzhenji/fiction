@@ -1,5 +1,6 @@
 
   import wepy from 'wepy';
+  import _ from 'lodash';
 
   const formatTime = date => {
     const year = date.getFullYear();
@@ -42,12 +43,42 @@
     });
   };
 
+  const convertO2O = (source, condition, merge, isSaveSource = true)  => {
+    let dist = {}
+    for (let key in source) {
+      if (condition.hasOwnProperty(key)) {
+        const val = source[key]
+        const todo = condition[key]
+        if (_.isString(todo)) {
+          dist[todo] = val
+        }
+        if (_.isFunction(todo)) {
+          dist[key] = todo(val, source)
+        }
+        if (_.isObject(todo)) {
+          for (let key2 in todo) {
+            dist[key2] = todo[key2](val, source)
+          }
+        }
+      } else {
+        if (isSaveSource)
+          dist[key] = source[key]
+      }
+    }
+    return _.assign(dist, merge);
+  }
+
+  //prod
+  // const urlPrefix = 'http://116.62.65.162:8080/fic';
+  //dev
   const urlPrefix = 'http://localhost:8080';
   module.exports = {
     formatTime: formatTime,
     fetch: fetch,
     post: post,
+    convertO2O: convertO2O,
     urlPrefix: urlPrefix,
     unit: UNIT_OF_MEASUREMENT,
     ratio: RMB_TO_KANDIAN_RATIO
   };
+ 

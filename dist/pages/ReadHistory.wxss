@@ -19,7 +19,7 @@
   
   .image-container {
     width: 25%;
-    height: 230rpx;
+    min-height: 230rpx;
   }
   
   .image-desc {

@@ -136,32 +136,6 @@
         </view>
         <view class='separate-line-1'/>
       </repeat>
-      //- <view class='ad-item-1'>
-      //-   <text>这里是title-2俺爹是发的说法大沙发第三方</text>
-      //-   <view class='ad-item-1-image-container'>
-      //-     <image class='index-image-small' mode='aspectFill' src='../../resources/dan-wide.jpg'/>
-      //-     <image class='index-image-small' mode='aspectFill' src='../../resources/dan-wide.jpg'/>
-      //-     <image class='index-image-small' mode='aspectFill' src='../../resources/dan-wide.jpg'/>
-      //-   </view>
-      //-   <view class='ad-item-tags'>
-      //-       <view class='tag'>爆款</view>
-      //-       <view class='classification'>玄幻</view>
-      //-   </view>
-      //- </view>
-      //- <view class='separate-line-1'/>
-      //- <view class='ad-item-2'>
-      //-   <view class='ad-item-2-left'>
-      //-     <text>这里是title-3手动阀手打发多少</text>
-      //-     <view class='ad-item-tags'>
-      //-       <view class='tag'>爆款</view>
-      //-       <view class='classification'>玄幻</view>
-      //-     </view>
-      //-   </view>
-      //-   <view class='ad-item-2-right'>
-      //-     <image class='index-image-small' mode='aspectFill' src='../../resources/dan-wide.jpg'/>
-      //-   </view>
-      //- </view>
-      //- <view class='separate-line-1'/>
     </view>
   </view>
 </view>
@@ -210,6 +184,16 @@ export default class Index extends wepy.page {
     let ads = [...this.advertisers];
     this.advertisers = ads.concat(adRet);
     this.$apply();
+  }
+
+  onShareAppMessage(options) {
+    console.log(options);
+    return {
+      path: '/pages/Index?name=aaron&age=12',
+      success: res => {
+        console.log('success', res);
+      }
+    };
   }
 
   async _init() {
