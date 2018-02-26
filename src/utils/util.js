@@ -69,9 +69,9 @@
   }
 
   //prod
-  // const urlPrefix = 'http://116.62.65.162:8080/fic';
+  const urlPrefix = 'http://116.62.65.162:8080/fic';
   //dev
-  const urlPrefix = 'http://localhost:8080';
+  // const urlPrefix = 'http://localhost:8080';
   module.exports = {
     formatTime: formatTime,
     fetch: fetch,

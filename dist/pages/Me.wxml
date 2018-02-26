@@ -2,11 +2,14 @@
 <view  wx:if="{{checkMode}}">
 <view class="userinfo-container">
 <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"/>
+<view class="userinfo-content">
+<text class="userinfo-nickname">{{userInfo.nickName}}</text>
+</view>
 </view>
 <view class="list-container">
 <view class="list-item">
 <image class="list-item-image" src="../resources/charge.png"/>
-<text class="list-item-text">充值咨询币</text>
+<text class="list-item-text" catchtap="alertDeving">充值咨询币</text>
 <image class="list-item-icon" src="../resources/go.png"/>
 </view>
 <view class="separate-line-1 padding-h-25"/>

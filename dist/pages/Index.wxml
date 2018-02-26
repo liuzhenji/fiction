@@ -1,14 +1,18 @@
 <view>
 <view  wx:if="{{checkMode}}" class="ad-container">
 <view class="ad-item-1">
-<text>茅侃侃1月25日发现于家中自杀</text>
+<block wx:for="{{advertisers}}" wx:for-index="index" wx:for-item="item" wx:key="{{index}}">
+<view catchtap="tapAd" class="ad-item-1" data-wpytapad-a="{{item.ficId}}">
+<text>{{item.title}}</text>
 <view class="ad-item-1-image-container">
-<image class="index-image-large" mode="aspectFill" src="../../resources/c1.jpeg"/>
+<image class="index-image-large" mode="aspectFill" src="{{urlPrefix}}/statics/images/{{item.imgs}}"/>
 </view>
 <view class="ad-item-tags">
 <view class="tag">最新</view>
-<view class="classification">{{item.clsTitle}}</view>
 </view>
+</view>
+<view class="separate-line-1"/>
+</block>
 </view>
 <view class="separate-line-1"/>
 </view>

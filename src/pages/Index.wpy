@@ -101,14 +101,18 @@
 <view>
   <view wx:if='{{checkMode}}' class='ad-container'>
     <view class='ad-item-1'>
-      <text>茅侃侃1月25日发现于家中自杀</text>
-      <view class='ad-item-1-image-container'>
-          <image class='index-image-large' mode='aspectFill' src='../../resources/c1.jpeg'/>
-      </view>
-      <view class='ad-item-tags'>
-        <view class='tag'>最新</view>
-        <view class='classification'>{{item.clsTitle}}</view>
-      </view>
+      <repeat for='{{advertisers}}' key='{{index}}'>
+        <view @tap.stop='tapAd({{item.ficId}})' class='ad-item-1'>
+          <text>{{item.title}}</text>
+          <view class='ad-item-1-image-container'>
+              <image class='index-image-large' mode='aspectFill' src='{{urlPrefix}}/statics/images/{{item.imgs}}'/>
+          </view>
+          <view class='ad-item-tags'>
+            <view class='tag'>最新</view>
+          </view>
+        </view>
+        <view class='separate-line-1'/>
+      </repeat>
     </view>
     <view class='separate-line-1'/>
   </view>
@@ -144,6 +148,8 @@
 <script>
 import wepy from 'wepy';
 import utils from '@/utils/util';
+import moment from 'moment';
+
 export default class Index extends wepy.page {
   data = {
     checkMode: true,
@@ -160,6 +166,9 @@ export default class Index extends wepy.page {
       this.$parent.globalData.ficId = ficId;
       this.$parent.globalData.serial = 1;
       this.$parent.globalData.chapId = null;
+      if (this.checkMode) {
+        return;
+      }
       wepy.navigateTo({
         url: './Read'
       });
@@ -187,12 +196,10 @@ export default class Index extends wepy.page {
   }
 
   onShareAppMessage(options) {
-    console.log(options);
+    const openid = wepy.getStorageSync('session').user.openid;
+    const timeStamp = moment(Date.now()).format('YYYY-MM-DDTHH:mm:ss.sss');
     return {
-      path: '/pages/Index?name=aaron&age=12',
-      success: res => {
-        console.log('success', res);
-      }
+      path: `/pages/Index?fromOpenid=${openid}&shareDate=${timeStamp}`
     };
   }
 
@@ -201,10 +208,10 @@ export default class Index extends wepy.page {
       url: `${utils.urlPrefix}/systemconfigs/1`
     });
     if (data) {
-      if (data === 1) {
-        return;
+      //非审核模式
+      if (data !== 1) {
+        this.checkMode = false;
       }
-      this.checkMode = false;
       this.$apply();
       await this._loadClses();
       let adRet = await this._loadAds(1, this.pageSize);
@@ -226,8 +233,9 @@ export default class Index extends wepy.page {
   }
 
   async _loadAds(pageNum, pageSize) {
+    const mode = this.checkMode ? 'check' : 'normal';
     let { data } = await utils.fetch({
-      url: `${utils.urlPrefix}/ads?pageNum=${pageNum}&pageSize=${pageSize}`
+      url: `${utils.urlPrefix}/ads?pageNum=${pageNum}&pageSize=${pageSize}&mode=${mode}`
     });
     if (data.result) {
       this.pageNum = pageNum;

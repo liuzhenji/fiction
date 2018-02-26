@@ -111,7 +111,7 @@
 
     events = {};
 
-    onLoad() {
+    onShow() {
       this._init();
     }
 
