@@ -46,6 +46,7 @@
 import wepy from 'wepy';
 import 'wepy-async-function';
 import utils from './utils/util';
+import _ from 'lodash';
 
 export default class extends wepy.app {
   config = {
@@ -94,7 +95,20 @@ export default class extends wepy.app {
   }
 
   globalData = {
-    userInfo: null
+    userInfo: null,
+    onShareCallback: function(res) {
+      if (res && res.errMsg === 'shareAppMessage:ok') {
+        utils.post({
+          url: `${utils.urlPrefix}/stat/usershares`,
+          data: utils.convertO2O(
+            res,
+            {
+              shareTickets: arr => _.join(arr)
+            }
+          )
+        });
+      }
+    }
   }
 
   constructor () {
@@ -173,17 +187,41 @@ export default class extends wepy.app {
     });
   }
 
-  _createSession() {
-    return wepy.login().then((res) => {
-      return utils.fetch({
-        url: `${utils.urlPrefix}/sessions`,
-        data: {
-          code: res.code
-        }
-      });
-    }).then((thrdRes) => {
-      return wepy.setStorageSync('session', thrdRes.data);
+  async _createSession() {
+    const loginRet = await wepy.login();
+    const ret = await utils.fetch({
+      url: `${utils.urlPrefix}/sessions`,
+      data: {
+        code: loginRet.code
+      }
     });
+    console.log('createSession', ret);
+    await wepy.setStorage({
+      key: 'session',
+      data: ret.data
+    });
+    // return wepy.login().then((res) => {
+    //   console.log('app', res);
+    //   return utils.fetch({
+    //     url: `${utils.urlPrefix}/sessions`,
+    //     data: {
+    //       code: res.code
+    //     }
+    //   });
+    // }).then((thrdRes) => {
+    //   console.log('setStorage', thrdRes);
+    //   return new Promise((resolve, reject) => {
+    //     wepy.setStorage({
+    //       key: 'session',
+    //       data: thrdRes.data,
+    //       success: () => {
+    //         resolve();
+    //       }
+    //     });
+    //   });
+    // }).catch(reason => {
+    //   console.log(reason);
+    // });
   }
 
   /**

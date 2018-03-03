@@ -1,7 +1,7 @@
 <style>
-  page {
+  /* page {
     background-color: rgb(202, 183, 158);
-  }
+  } */
 
   .read-content-container {
     display: flex;
@@ -70,27 +70,29 @@
   }
 
   .read-modal-container {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     width: 100%;
-    height: 3em;
     box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 25rpx;
   }
 
   .read-modal-catalog {
-    width: 35rpx;
-    height: 35rpx;
+    width: 45%;
+    height: 3em;
+    line-height: 3em;
+    background-color: white;
+    text-align: center;
+    display: inline-block;
   }
 
   .read-modal-next {
+    width: 55%;
+    height: 3em;
+    line-height: 3em;
+    background-color: rgb(84, 171, 38);
     color: white;
-    font-size: 13px;
+    text-align: center;
+    display: inline-block;
   }
 </style>
 
@@ -99,7 +101,7 @@
     <view wx:if='{{!needToCharge}}' @tap.stop='tapContent'>
       <view class='read-content-container'>
           <text class='content-title'>{{content.chapter.title}}</text>
-          <text class='content-content'>{{content.content}}</text>
+          <text @tap.stop='tapContent' class='content-content'>{{content.content}}</text>
       </view>
       <view class='read-controller-container'>
           <button @tap.stop='tapNext' class='controller-button'>下一章</button>
@@ -109,12 +111,10 @@
               <view @tap.stop='tapCatalog'>目录</view>
           </view>
       </view>
-      <!-- 目录弹出框 -->
+      //- 目录弹出框
       <view wx:if='{{catalogModal}}' class='read-modal-container'>
-          <view @tap.stop='tapCatalog'>
-            <image class='read-modal-catalog' src='../../resources/catalog.png' mode='aspectFill'/>
-          </view>
-          <view class='read-modal-next' @tap.stop='tapNext'>下一章</view>
+        <view class='read-modal-catalog' @tap.stop='tapCatalog'>目录</view>
+        <view class='read-modal-next' @tap.stop='tapNext'>下一章</view>
       </view>
     </view>
     <view wx:else class='read-charge-container'>
@@ -133,9 +133,9 @@
 
   export default class Read extends wepy.page {
     config = {
-      navigationBarTitleText: 'Read',
-      navigationBarBackgroundColor: '#cab79e',
-      backgroundColor: '#cab79e'
+      navigationBarTitleText: '阅读'
+      // navigationBarBackgroundColor: '#cab79e',
+      // backgroundColor: '#cab79e'
     };
 
     data = {
@@ -205,7 +205,6 @@
     };
 
     async onShow() {
-      console.log(getCurrentPages());
       let ficId = this.$parent.globalData.ficId;
       let chapId = this.$parent.globalData.chapId;
       let serial = this.$parent.globalData.serial;
@@ -215,8 +214,10 @@
 
     async _loadContent({ ficId, chapId, serial }) {
       try {
-        //显示title loading
-        await wepy.showNavigationBarLoading();
+        //显示loading
+        await wepy.showLoading({
+          title: '拼命加载'
+        });
         let params = new Object();
         if (ficId) {
           params.ficId = ficId;
@@ -227,7 +228,7 @@
         if (serial) {
           params.serial = serial;
         }
-        let contentRet = await utils.fetch({
+        const contentRet = await utils.fetch({
           url: `${utils.urlPrefix}/contents`,
           data: params
         });
@@ -289,7 +290,7 @@
       } catch (e) {
         console.log(e);
       } finally {
-        await wepy.hideNavigationBarLoading();
+        wepy.hideLoading();
         this.catalogModal = false;
         this.$apply();
       }

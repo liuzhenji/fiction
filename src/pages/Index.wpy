@@ -196,10 +196,14 @@ export default class Index extends wepy.page {
   }
 
   onShareAppMessage(options) {
+    console.log(options);
     const openid = wepy.getStorageSync('session').user.openid;
     const timeStamp = moment(Date.now()).format('YYYY-MM-DDTHH:mm:ss.sss');
     return {
-      path: `/pages/Index?fromOpenid=${openid}&shareDate=${timeStamp}`
+      path: `/pages/Index?fromOpenid=${openid}&shareDate=${timeStamp}`,
+      complete: res => {
+        this.$parent.globalData.onShareCallback(res);
+      }
     };
   }
 

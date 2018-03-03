@@ -1,7 +1,7 @@
 
-  page {
+  /* page {
     background-color: rgb(202, 183, 158);
-  }
+  } */
 
   .read-content-container {
     display: flex;
@@ -70,25 +70,27 @@
   }
 
   .read-modal-container {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     width: 100%;
-    height: 3em;
     box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 25rpx;
   }
 
   .read-modal-catalog {
-    width: 35rpx;
-    height: 35rpx;
+    width: 45%;
+    height: 3em;
+    line-height: 3em;
+    background-color: white;
+    text-align: center;
+    display: inline-block;
   }
 
   .read-modal-next {
+    width: 55%;
+    height: 3em;
+    line-height: 3em;
+    background-color: rgb(84, 171, 38);
     color: white;
-    font-size: 13px;
+    text-align: center;
+    display: inline-block;
   }

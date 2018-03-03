@@ -2,7 +2,7 @@
 <view  wx:if="{{!needToCharge}}" catchtap="tapContent">
 <view class="read-content-container">
 <text class="content-title">{{content.chapter.title}}</text>
-<text class="content-content">{{content.content}}</text>
+<text catchtap="tapContent" class="content-content">{{content.content}}</text>
 </view>
 <view class="read-controller-container">
 <button catchtap="tapNext" class="controller-button">下一章</button>
@@ -12,11 +12,8 @@
 <view catchtap="tapCatalog">目录</view>
 </view>
 </view>
-<!-- 目录弹出框 -->
 <view wx:if="{{catalogModal}}" class="read-modal-container">
-<view catchtap="tapCatalog">
-<image class="read-modal-catalog" src="../../resources/catalog.png" mode="aspectFill"/>
-</view>
+<view class="read-modal-catalog" catchtap="tapCatalog">目录</view>
 <view class="read-modal-next" catchtap="tapNext">下一章</view>
 </view>
 </view>

@@ -69,7 +69,7 @@
   }
 
   //prod
-  const urlPrefix = 'http://116.62.65.162:8080/fic';
+  const urlPrefix = 'https://www.1jtec.com/fic';
   //dev
   // const urlPrefix = 'http://localhost:8080';
   module.exports = {
