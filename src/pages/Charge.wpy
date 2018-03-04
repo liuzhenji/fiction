@@ -234,14 +234,13 @@ export default class Charge extends wepy.page {
     async tapChargeBtn() {
       //唤起微信支付功能
       //充值记录
-      let chargeType = this.chargeTypes[this.checkedIndex];
-      let { data } = await utils.post({
+      const chargeType = this.chargeTypes[this.checkedIndex];
+      const { data } = await utils.post({
         url: `${utils.urlPrefix}/chargeproducts`,
         data: {
           chargeTypeId: chargeType.id
         }
       });
-      console.log(data);
       if (data) {
         wepy.showToast({
           title: '充值成功'

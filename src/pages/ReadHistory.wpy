@@ -100,10 +100,8 @@
 
     methods = {
       tapHistory(itemIndex) {
-        let history = this.histories[itemIndex];
-        this.$parent.globalData.ficId = history.fiction.id;
-        this.$parent.globalData.chapId = history.chapter.id;
-        this.$parent.globalData.serial = null;
+        const history = this.histories[itemIndex];
+        this.$parent.globalData.setRead(history.fiction.id, history.chapter.id, null);
         wepy.navigateTo({
           url: './Read'
         });
@@ -139,7 +137,7 @@
     }
 
     async _init() {
-      let checkMode = await utils.fetch({
+      const checkMode = await utils.fetch({
         url: `${utils.urlPrefix}/systemconfigs/1`
       });
       if (checkMode.data === 1) {

@@ -182,9 +182,9 @@
        * 点击下一章
        */
       tapNext() {
-        this._loadContent({
-          ficId: this.data.ficId,
-          serial: this.data.serial + 1
+        this.$parent.globalData.setRead(this.ficId, null, this.serial + 1);
+        wepy.redirectTo({
+          url: './Read'
         });
       },
       /**
@@ -197,9 +197,9 @@
           });
           return;
         }
-        this._loadContent({
-          ficId: this.data.ficId,
-          serial: this.data.serial - 1
+        this.$parent.globalData.setRead(this.ficId, null, this.serial - 1);
+        wepy.redirectTo({
+          url: './Read'
         });
       }
     };
@@ -237,7 +237,7 @@
           this.ficId = contentRet.data.body.chapter.ficId;
           this.title = contentRet.data.body.chapter.title;
           this.chapter = contentRet.data.body.chapter;
-          this.$apply();
+          //不用充值
           if (this.userInfo.balance >= contentRet.data.body.chapter.costBalance) {
             let modalRet = await wepy.showModal({
               content: `当前章节需支付${contentRet.data.body.chapter.costBalance}看点`,
@@ -255,7 +255,6 @@
           }
           //需要充值
           this.needToCharge = true;
-          this.$apply();
           return new Promise((resolve, reject) => {
             resolve();
           });
@@ -269,21 +268,21 @@
             resolve();
           });
         }
+        const newFicId = contentRet.data.result[0].fiction.id;
+        const newChapter = contentRet.data.result[0].chapter;
+        const newSerial = newChapter.serial;
         //刷新数据
         this.needToCharge = false;
         this.content = contentRet.data.result[0];
-        this.chapter = contentRet.data.result[0].chapter;
-        this.serial = contentRet.data.result[0].chapter.serial;
-        this.ficId = contentRet.data.result[0].fiction.id;
-        this.$apply();
+        this.chapter = newChapter;
+        this.serial = newSerial;
+        this.ficId = newFicId;
         //修改barTitle
         wepy.setNavigationBarTitle({
-          title: contentRet.data.result[0].chapter.title
+          title: newChapter.title
         });
         //同步全局章节记录
-        this.$parent.globalData.ficId = contentRet.data.result[0].fiction.id;
-        this.$parent.globalData.chapId = contentRet.data.result[0].chapter.id;
-        this.$parent.globalData.serial = contentRet.data.result[0].chapter.serial;
+        this.$parent.globalData.setRead(newFicId, newChapter.id, newSerial);
         return new Promise((resolve, reject) => {
           resolve();
         });
