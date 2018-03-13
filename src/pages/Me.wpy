@@ -165,7 +165,6 @@
 
     async _init() {
       //加载微信用户的基础信息
-      //todo:考虑用户没有授权用户信息等情况
       if (!this.$parent.globalData.userInfo) {
         this.$parent.loadUserInfoCallback = (userInfo) => {
           this.userInfo = userInfo;
@@ -175,7 +174,7 @@
         this.userInfo = this.$parent.globalData.userInfo;
         this.$apply();
       }
-      let checkRet = await utils.fetch({
+      const checkRet = await utils.fetch({
         url: `${utils.urlPrefix}/systemconfigs/1`
       });
       //审核模式

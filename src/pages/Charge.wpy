@@ -255,10 +255,17 @@ export default class Charge extends wepy.page {
     }
   };
 
-  onLoad() {
-    this.balance = wepy.getStorageSync('session').user.balance;
+  async onLoad() {
+    wepy.showLoading({
+      title: '拼命加载'
+    });
+    const balanceRet = await utils.fetch({
+      url: `${utils.urlPrefix}/userbalances`
+    });
+    this.balance = balanceRet.data.result[0].balance;
     this.$apply();
     this._loadChargeTypes();
+    wepy.hideLoading();
   }
 
   /**

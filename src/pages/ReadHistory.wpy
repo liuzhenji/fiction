@@ -67,8 +67,8 @@
           <view class='content-container'>
             <text class='content-title'>{{item.fiction.title}}</text>
             <text class='content-artist'>{{item.fiction.artist}}</text>
-            <text class='content-last-read'>更新至 {{item.fiction.latestChap.title}}</text>
             <text class='content-last-read'>上次读到 {{item.chapter.title}}</text>
+            <text class='content-last-read'>更新至 {{item.fiction.latestChap.title}}</text>
           </view>
         </view>
       </repeat>

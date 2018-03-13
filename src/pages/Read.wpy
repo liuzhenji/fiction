@@ -209,13 +209,13 @@
       let chapId = this.$parent.globalData.chapId;
       let serial = this.$parent.globalData.serial;
       //发起请求获取小说内容
-      await this._loadContent({ ficId: ficId, chapId: chapId, serial: serial });
+      await this._loadContent(ficId, chapId, serial);
     }
 
-    async _loadContent({ ficId, chapId, serial }) {
+    async _loadContent(ficId, chapId, serial) {
       try {
         //显示loading
-        await wepy.showLoading({
+        wepy.showLoading({
           title: '拼命加载'
         });
         let params = new Object();
@@ -237,36 +237,39 @@
           this.ficId = contentRet.data.body.chapter.ficId;
           this.title = contentRet.data.body.chapter.title;
           this.chapter = contentRet.data.body.chapter;
-          //不用充值
-          if (this.userInfo.balance >= contentRet.data.body.chapter.costBalance) {
-            let modalRet = await wepy.showModal({
+          this.$apply();
+          const balanceRet = await utils.fetch({
+            url: `${utils.urlPrefix}/userbalances`
+          });
+          const balance = balanceRet.data.result[0].balance;
+          if (balance >= contentRet.data.body.chapter.costBalance) {
+            wepy.hideLoading();
+            const modalRet = await wepy.showModal({
               content: `当前章节需支付${contentRet.data.body.chapter.costBalance}看点`,
               confirmText: '支付'
             });
             if (modalRet && modalRet.confirm) {
               //购买章节
               await this._purchaseChapter(contentRet.data.body.chapter.id);
-            } else {
-              console.log('用户取消购买章节');
+              //重新加载章节
+              await this._loadContent(this.ficId, this.chapter.id, this.chapter.serial);
             }
-            return new Promise((resolve, reject) => {
-              resolve();
-            });
+            return;
           }
           //需要充值
+          this.userInfo = { ...this.userInfo, balance };
           this.needToCharge = true;
-          return new Promise((resolve, reject) => {
-            resolve();
-          });
+          this.$apply();
+          wepy.hideLoading();
+          return;
         }
         //判断是否最后章节
         if (contentRet.data.result === undefined) {
+          wepy.hideLoading();
           wepy.showToast({
-            title: '已经是最后一章'
+            title: '没有更新章节'
           });
-          return new Promise((resolve, reject) => {
-            resolve();
-          });
+          return;
         }
         const newFicId = contentRet.data.result[0].fiction.id;
         const newChapter = contentRet.data.result[0].chapter;
@@ -283,13 +286,11 @@
         });
         //同步全局章节记录
         this.$parent.globalData.setRead(newFicId, newChapter.id, newSerial);
-        return new Promise((resolve, reject) => {
-          resolve();
-        });
-      } catch (e) {
-        console.log(e);
-      } finally {
         wepy.hideLoading();
+        return;
+      } catch (e) {
+        wepy.hideLoading();
+      } finally {
         this.catalogModal = false;
         this.$apply();
       }
