@@ -59,6 +59,10 @@
     height: 30rpx;
     width: 30rpx;
   }
+
+  .hover {
+    background-color: #eee;
+  }
 </style>
 <template lang='pug'>
   <view>
@@ -70,12 +74,11 @@
         </view>
       </view>
       <view class='list-container'>
-        <view class='list-item'>
-          <image class='list-item-image' src='../resources/charge.png'/>
+        <view hover-class='hover' class='list-item'>
+          <image class='list-item-image' src='../resources/phone.png'/>
           <text class='list-item-text' @tap.stop="alertDeving">加入我们</text>
           <image class='list-item-icon' src='../resources/go.png'/>
         </view>
-        <view class='separate-line-1 padding-h-25'></view>
       </view>
     </view>
     <view wx:else>
@@ -87,13 +90,13 @@
         </view>
       </view>
       <view class='list-container'>
-        <view class='list-item' @tap.stop='tapCharge'>
+        <view hover-class='hover' class='list-item' @tap.stop='tapCharge'>
           <image class='list-item-image' src='../resources/charge.png'/>
           <text class='list-item-text'>充值</text>
           <image class='list-item-icon' src='../resources/go.png'/>
         </view>
         <view class='separate-line-1 padding-h-25'></view>
-        <view class='list-item' @tap.stop='tapChargeRecord'>
+        <view hover-class='hover' class='list-item' @tap.stop='tapChargeRecord'>
           <image class='list-item-image' src='../resources/history.png'/>
           <text class='list-item-text'>充值记录</text>
           <image class='list-item-icon' src='../resources/go.png'/>
@@ -110,9 +113,8 @@
   export default class Me extends wepy.page {
     data = {
       checkMode: true,
-      userInfo: new Object(),
+      userInfo: {},
       hasUserInfo: false,
-      // canIUse: wepy.canIUse('button.open-type.getUserInfo'),
       balance: 0,
       unit: utils.unit
     };
@@ -145,48 +147,36 @@
     }
 
     async onShow() {
-      wepy.showLoading();
-      await this._init();
-      await this._loadUserInfoFrom3rd();
+      wepy.showLoading({
+        title: '疯狂加载'
+      });
+      //加载微信用户的基础信息
+      if (!this.$parent.globalData.userInfo) {
+        this.$parent.loadUserInfoCallback = userInfo => {
+          this.userInfo = userInfo;
+        };
+      } else {
+        this.userInfo = this.$parent.globalData.userInfo;
+      }
+      //审核模式
+      const { data } = await utils.fetch({
+        url: `${utils.urlPrefix}/systemconfigs/1`
+      });
+      this.checkMode = utils.doesCheckMode(data);
+      //加载微信用户3rd方信息
+      const userInfoFrom3rd = await this._loadUserInfoFrom3rd();
+      const session = wepy.getStorageSync('session');
+      wepy.setStorageSync('session', {...session, user: userInfoFrom3rd});
+      this.balance = userInfoFrom3rd.balance;
+      this.$apply();
       wepy.hideLoading();
     }
 
     async _loadUserInfoFrom3rd() {
-      let { data } = await utils.fetch({
+      const { data } = await utils.fetch({
         url: `${utils.urlPrefix}/users`
       });
-      if (data.result) {
-        let session = wepy.getStorageSync('session');
-        wepy.setStorageSync('session', {...session, user: data.result[0]});
-        this.balance = data.result[0].balance;
-        this.$apply();
-      }
-    }
-
-    async _init() {
-      //加载微信用户的基础信息
-      if (!this.$parent.globalData.userInfo) {
-        this.$parent.loadUserInfoCallback = (userInfo) => {
-          this.userInfo = userInfo;
-          this.$apply();
-        };
-      } else {
-        this.userInfo = this.$parent.globalData.userInfo;
-        this.$apply();
-      }
-      const checkRet = await utils.fetch({
-        url: `${utils.urlPrefix}/systemconfigs/1`
-      });
-      //审核模式
-      if (checkRet.data === 1) {
-        this.checkMode = true;
-        this.$apply();
-        return new Promise((resolve, reject) => {
-          resolve();
-        });
-      }
-      this.checkMode = false;
-      this.$apply();
+      return data.result[0] || {};
     }
   }
 </script>

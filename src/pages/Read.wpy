@@ -21,6 +21,7 @@
 
   .content-content {
     margin-top: 35rpx;
+    font-size: 14pt;
   }
 
   .read-charge-container {
@@ -29,44 +30,35 @@
 
   .charge-button {
     width: 75%;
-    height: 2.5em;
-    border-radius: 1.25em;    
+    height:76rpx;
+    line-height:76rpx;
+    border-radius:38rpx;
     color: white;
     font-size: 12px;
     text-align: center;
-    background-color: rgb(24, 144, 255);
+    background-color: #56b356;
     margin-top: 55rpx;
   }
 
   .read-controller-container {
     display: flex;
     flex-direction: column;
-    padding: 25rpx 0rpx 0 25rpx;
+    padding: 25rpx 0rpx 55rpx 25rpx;
   }
 
-  .controller-other {
-    color: rgb(24, 144, 255);
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-top: 15rpx;
-  }
-
-  .controller-button {
+  .controller-btn {
     width: 75%;
-    height: 2.5em;
-    border-radius: 1.25em;    
+    height:76rpx;
+    line-height:76rpx;
+    border-radius:38rpx;
     color: white;
     font-size: 12px;
     text-align: center;
-    background-color: rgb(24, 144, 255);
+    background-color: #56b356;
   }
 
-  .blue-line-v {
-    width: 1px;
-    height: 1em;
-    background-color: rgb(24, 144, 255);
+  .controller-btn-hover {
+    background-color: hsl(120, 33%, 60%);
   }
 
   .read-modal-container {
@@ -74,6 +66,7 @@
     bottom: 0;
     width: 100%;
     box-sizing: border-box;
+    box-shadow:0px -1px 123px #888;
   }
 
   .read-modal-catalog {
@@ -89,7 +82,7 @@
     width: 55%;
     height: 3em;
     line-height: 3em;
-    background-color: rgb(84, 171, 38);
+    background-color: #56b356;
     color: white;
     text-align: center;
     display: inline-block;
@@ -103,13 +96,8 @@
           <text class='content-title'>{{content.chapter.title}}</text>
           <text @tap.stop='tapContent' class='content-content'>{{content.content}}</text>
       </view>
-      <view class='read-controller-container'>
-          <button @tap.stop='tapNext' class='controller-button'>下一章</button>
-          <view class='controller-other'>
-              <view @tap.stop='tapLast'>上一章</view>
-              <view class='blue-line-v'/>
-              <view @tap.stop='tapCatalog'>目录</view>
-          </view>
+      <view wx:if='{{content}}' class='read-controller-container'>
+          <button hover-class='controller-btn-hover' @tap.stop='tapNext' class='controller-btn'>下一章</button>
       </view>
       //- 目录弹出框
       <view wx:if='{{catalogModal}}' class='read-modal-container'>
@@ -121,7 +109,7 @@
       <view class='content-title'>{{chapter.title}}</view>
       <view class='content-tip'>本章价格  {{chapter.costBalance}}{{unit}}</view>
       <view class='content-tip'>当前余额  {{userInfo.balance}}{{unit}}</view>
-      <button class='charge-button' @tap.stop='tapChargeBtn'>充值</button>
+      <button hover-class='controller-btn-hover' class='charge-button' @tap.stop='tapChargeBtn'>充值</button>
     </view>
   </view>
 </template>
@@ -130,12 +118,11 @@
 <script>
   import wepy from 'wepy';
   import utils from '@/utils/util';
+  import moment from 'moment';
 
   export default class Read extends wepy.page {
     config = {
       navigationBarTitleText: '阅读'
-      // navigationBarBackgroundColor: '#cab79e',
-      // backgroundColor: '#cab79e'
     };
 
     data = {
@@ -144,19 +131,17 @@
       chapter: null,
       ficId: null,
       serial: null,
-      content: new Object(),
+      content: null,
       needToCharge: false,
       catalogModal: false
     };
 
     methods = {
-
       /**
        * 点击充值按键
        */
       tapChargeBtn() {
         this.catalogModal = false;
-        this.$apply();
         wepy.navigateTo({
           url: './Charge'
         });
@@ -166,14 +151,12 @@
        */
       tapContent() {
         this.catalogModal = !this.catalogModal;
-        this.$apply();
       },
       /**
        * 点击目录按键
        */
       tapCatalog() {
         this.catalogModal = false;
-        this.$apply();
         wepy.navigateTo({
           url: './Catalog'
         });
@@ -186,28 +169,25 @@
         wepy.redirectTo({
           url: './Read'
         });
-      },
-      /**
-       * 点击上一章
-       */
-      tapLast() {
-        if (this.data.serial === 1) {
-          wepy.showToast({
-            title: '已经是第一章'
-          });
-          return;
-        }
-        this.$parent.globalData.setRead(this.ficId, null, this.serial - 1);
-        wepy.redirectTo({
-          url: './Read'
-        });
       }
     };
 
+    onShareAppMessage(options) {
+      const openid = wepy.getStorageSync('session').user.openid;
+      const timeStamp = moment(Date.now()).format('YYYY-MM-DDTHH:mm:ss.sss');
+      const ficId = this.$parent.globalData.ficId;
+      return {
+        path: `/pages/Description?fromOpenid=${openid}&shareDate=${timeStamp}&ficId=${ficId}`,
+        complete: res => {
+          this.$parent.globalData.onShareCallback(res);
+        }
+      };
+    }
+
     async onShow() {
-      let ficId = this.$parent.globalData.ficId;
-      let chapId = this.$parent.globalData.chapId;
-      let serial = this.$parent.globalData.serial;
+      const ficId = this.$parent.globalData.ficId;
+      const chapId = this.$parent.globalData.chapId;
+      const serial = this.$parent.globalData.serial;
       //发起请求获取小说内容
       await this._loadContent(ficId, chapId, serial);
     }
@@ -218,41 +198,30 @@
         wepy.showLoading({
           title: '拼命加载'
         });
-        let params = new Object();
-        if (ficId) {
-          params.ficId = ficId;
-        }
-        if (chapId) {
-          params.chapId = chapId;
-        }
-        if (serial) {
-          params.serial = serial;
-        }
-        const contentRet = await utils.fetch({
-          url: `${utils.urlPrefix}/contents`,
-          data: params
-        });
+        const content = await this._pureLoadContent(ficId, chapId, serial);
         //章节不可看
-        if (contentRet.data.head && contentRet.data.head.code === '0005') {
-          this.ficId = contentRet.data.body.chapter.ficId;
-          this.title = contentRet.data.body.chapter.title;
-          this.chapter = contentRet.data.body.chapter;
+        if (content.head && content.head.code === '0005') {
+          this.ficId = content.body.chapter.ficId;
+          this.title = content.body.chapter.title;
+          this.chapter = content.body.chapter;
           this.$apply();
-          const balanceRet = await utils.fetch({
-            url: `${utils.urlPrefix}/userbalances`
-          });
-          const balance = balanceRet.data.result[0].balance;
-          if (balance >= contentRet.data.body.chapter.costBalance) {
+          //加载用户余额
+          const balance = await this._loadBalance();
+          if (balance >= content.body.chapter.costBalance) {
             wepy.hideLoading();
             const modalRet = await wepy.showModal({
-              content: `当前章节需支付${contentRet.data.body.chapter.costBalance}看点`,
+              content: `当前章节需支付${content.body.chapter.costBalance}看点`,
               confirmText: '支付'
             });
             if (modalRet && modalRet.confirm) {
               //购买章节
-              await this._purchaseChapter(contentRet.data.body.chapter.id);
-              //重新加载章节
-              await this._loadContent(this.ficId, this.chapter.id, this.chapter.serial);
+              const successed = await this._purchaseChapter(content.body.chapter.id);
+              if (successed) {
+                //重新加载章节
+                wepy.redirectTo({
+                  url: './Read'
+                });
+              }
             }
             return;
           }
@@ -264,19 +233,19 @@
           return;
         }
         //判断是否最后章节
-        if (contentRet.data.result === undefined) {
+        if (content.result === undefined) {
           wepy.hideLoading();
           wepy.showToast({
             title: '没有更新章节'
           });
           return;
         }
-        const newFicId = contentRet.data.result[0].fiction.id;
-        const newChapter = contentRet.data.result[0].chapter;
+        const newFicId = content.result[0].fiction.id;
+        const newChapter = content.result[0].chapter;
         const newSerial = newChapter.serial;
         //刷新数据
         this.needToCharge = false;
-        this.content = contentRet.data.result[0];
+        this.content = content.result[0];
         this.chapter = newChapter;
         this.serial = newSerial;
         this.ficId = newFicId;
@@ -287,13 +256,37 @@
         //同步全局章节记录
         this.$parent.globalData.setRead(newFicId, newChapter.id, newSerial);
         wepy.hideLoading();
-        return;
       } catch (e) {
         wepy.hideLoading();
       } finally {
         this.catalogModal = false;
         this.$apply();
       }
+    }
+
+    async _loadBalance() {
+      const { data } = await utils.fetch({
+        url: `${utils.urlPrefix}/userbalances`
+      });
+      return data.result[0].balance || 0;
+    }
+
+    async _pureLoadContent(ficId, chapId, serial) {
+      let params = {};
+      if (ficId) {
+        params.ficId = ficId;
+      }
+      if (chapId) {
+        params.chapId = chapId;
+      }
+      if (serial) {
+        params.serial = serial;
+      }
+      const { data } = await utils.fetch({
+        url: `${utils.urlPrefix}/contents`,
+        data: params
+      });
+      return data;
     }
 
     /**
@@ -307,12 +300,10 @@
             chapId
           }
         });
-        await wepy.showToast({
-          title: '购买成功!'
-        });
-        await this._loadContent(this.$parent.globalData.ficId, chapId);
+        return true;
       } catch (err) {
         console.log('购买章节发生异常');
+        return false;
       }
     }
   }

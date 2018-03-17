@@ -23,7 +23,7 @@ span {
 
 .image-container {
   width: 30%;
-  height: 280rpx;
+  height: 250rpx;
 }
 
 .image-desc {
@@ -32,6 +32,7 @@ span {
 }
 .content-container {
   width: 70%;
+  height: 250rpx;
   display: flex;
   padding: 3rpx 0rpx 3rpx 30rpx;
   flex-direction: column;
@@ -53,7 +54,7 @@ span {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 </style>
 
@@ -62,7 +63,7 @@ span {
   <view wx:if='{{fictions.length ===0}}'>没有找到小说....</view>
   <view wx:else>
     <repeat for='{{fictions}}' key='{{index}}'>
-      <view @tap.stop='tapFiction({{item.id}})' class='fiction-item' >
+      <view @tap.stop='tapFiction({{index}})' class='fiction-item' >
         <view class='image-container'>
           <image mode='aspectFill' class='image-desc' src='{{urlPrefix}}/statics/images/{{item.avatar}}'></image>
         </view>
@@ -96,39 +97,52 @@ export default class Fiction extends wepy.page {
   }
 
   methods = {
-    tapFiction(ficId) {
-      this.$parent.globalData.ficId = ficId;
-      this.$parent.globalData.chapId = null;
-      this.$parent.globalData.serial = 1;
+    tapFiction(index) {
+      const fiction = this.fictions[index];
+      this.$parent.globalData.setRead(fiction.id, null, 1);
       wepy.navigateTo({
-        url: './Read'
+        url: `./Description?avatar=${fiction.avatar}&title=${fiction.title}&artist=${fiction.artist}&description=${fiction.description}`
       });
     }
   }
 
   async onLoad(options) {
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
     this.titleLike = options.titleLike || null;
     this.clsId = options.clsId || null;
-    let ret = await this._loadFictions(this.clsId, this.titleLike, 1, this.pageSize);
-    this.fictions = ret;
+    const fictions = await this._loadFictions(this.clsId, this.titleLike, 1, this.pageSize);
+    this.fictions = fictions;
     this.$apply();
+    wepy.hideLoading();
   }
 
   async onPullDownRefresh() {
-    let ret = await this._loadFictions(this.clsId, this.titleLike, 1, this.pageSize);
-    this.fictions = ret;
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
+    const fictions = await this._loadFictions(this.clsId, this.titleLike, 1, this.pageSize);
+    this.fictions = fictions;
+    this.pageNum = 1;
     this.$apply();
+    wepy.hideLoading();
   }
 
   async onReachBottom() {
-    let ret = await this._loadFictions(this.clsId, this.titleLike, this.pageNum + 1, this.pageSize);
-    let fictions = [...this.fictions, ...ret];
-    this.fictions = fictions;
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
+    const nextPageNum = this.pageNum + 1;
+    const fictions = await this._loadFictions(this.clsId, this.titleLike, nextPageNum, this.pageSize);
+    this.fictions = [...this.fictions, ...fictions];
+    this.pageNum = nextPageNum;
     this.$apply();
+    wepy.hideLoading();
   }
 
   async _loadFictions(clsId, titleLike, pageNum, pageSize) {
-    let params = new Object();
+    let params = {};
     params.pageSize = pageSize;
     params.pageNum = pageNum;
     if (clsId) {
@@ -137,17 +151,11 @@ export default class Fiction extends wepy.page {
     if (titleLike) {
       params.titleLike = titleLike;
     }
-    let { data } = await utils.fetch({
+    const { data } = await utils.fetch({
       url: `${utils.urlPrefix}/fictions`,
       data: params
     });
-    if (data.result) {
-      this.pageNum = pageNum;
-      this.$apply();
-      return data.result;
-    } else {
-      return new Array();
-    }
+    return data.result || [];
   }
 }
 </script>

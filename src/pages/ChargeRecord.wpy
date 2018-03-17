@@ -1,37 +1,39 @@
 <style>
 .record-container {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .item-container {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 25rpx 25rpx 20rpx 25rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 25rpx 25rpx 20rpx 25rpx;
+  height:85rpx;
+  line-height:85rpx;
 }
 
 .content-desc {
-    font-size: 12px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
+  font-size: 12px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
 }
 
 .content-date {
-    font-size: 9px;
+  font-size: 9px;
 }
 
 .no-more {
-    display: flex;
-    justify-content: center;
-    margin: 30rpx 0;
+  display: flex;
+  justify-content: center;
+  margin: 30rpx 0;
 }
 </style>
 
@@ -62,32 +64,47 @@ export default class ChargeRecord extends wepy.page {
 
   data = {
     noMoreFlag: false,
-    chargeRecords: new Array(),
-    pageSize: 10,
+    chargeRecords: [],
+    pageSize: 20,
     pageNum: 1
   }
 
-  onLoad() {
-    this._loadChargeRecords(1, this.pageSize);
+  async onLoad() {
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
+    const chargeRecords = await this._loadChargeRecords(1, this.pageSize);
+    this.chargeRecords = chargeRecords;
+    this.$apply();
+    wepy.hideLoading();
   }
 
-  onReachBottom() {
-    this._loadChargeRecord(this.data.pageNum + 1, this.data.pageSize);
+  async onReachBottom() {
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
+    const newPageNum = this.pageNum + 1;
+    const chargeRecords = await this._loadChargeRecords(newPageNum, this.pageSize);
+    let oRecords = this.chargeRecords;
+    this.pageNum = newPageNum;
+    this.chargeRecords = [...oRecords.concat(chargeRecords)];
+    this.$apply();
+    wepy.hideLoading();
   }
 
   async _loadChargeRecords(pageNum, pageSize) {
-    let { data } = await utils.fetch({
-      url: `${utils.urlPrefix}/chargeproducts?pageNum=${pageNum}&pageSize=${pageSize}`
+    const { data } = await utils.fetch({
+      url: `${utils.urlPrefix}/chargerecords?pageNum=${pageNum}&pageSize=${pageSize}`
     });
-    if (data.result) {
-      this.chargeRecords = data.result.map((value, index, array) => {
-        return {
-          desc: `充${value.price}元(${value.balance}看点)，赠${value.bonus}元`, createDate: new Date(value.createDate).toLocaleString()
-        };
-      });
-      this.pageNum = pageNum;
-      this.$apply();
+    if (!data.result) {
+      return [];
     }
+    const chargeRecords = data.result.map((value, index, array) => {
+      return {
+        desc: `充${value.price}元(${value.balance}看点)，赠${value.bonus}元`, createDate: new Date(value.createDate).toLocaleString()
+      };
+    });
+    return chargeRecords;
   }
 }
 </script>

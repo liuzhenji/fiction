@@ -104,7 +104,7 @@
   bottom:0%;
   width:36rpx;
   height:36rpx;
-  background-color:rgb(24, 144, 255);
+  background-color:#56b356;
   border-radius:36rpx 0 0 0
 }
 
@@ -126,12 +126,13 @@
 
 .submit-button {
     width: 75%;
-    height: 2.5em;
-    border-radius: 1.25em;    
+    height: 76rpx;
+    line-height: 76rpx;
+    border-radius: 38rpx;    
     color: white;
     font-size: 12px;
     text-align: center;
-    background-color: rgb(24, 144, 255);
+    background-color: #56b356;
 }
 
 .detail-tips-container {
@@ -167,7 +168,7 @@
   <view class="separate-line-20"/>
   <view class="charge-detail-container">
     <view class="detail-title-container">
-      <view class='blue-block'></view>
+      <view class='theme-block'></view>
       <text class='detail-title-text'>微信支付</text>
       <text class='detail-tip-text'>（1元=100看点）</text>
     </view>
@@ -199,7 +200,7 @@
     </view>
     <view class="detail-tips-container">
       <view class="tips-title-container">
-        <view class="blue-block"></view>
+        <view class="theme-block"></view>
             <text class='detail-title-text'>温馨的小提示</text>
         </view>
         <text class='detail-content-text'>1.充值获得的看点仅限在本公司书城使用</text>
@@ -218,25 +219,24 @@ import utils from '@/utils/util';
 
 export default class Charge extends wepy.page {
   data = {
-    chargeTypes: new Array(),
+    chargeTypes: [],
     checkedIndex: 0,
-    checkedBorderColor: '#2196F3',
+    checkedBorderColor: '#56b356',
     uncheckedBorderColor: '#eee',
-    balance: null,
+    balance: 0,
     unit: utils.unit
   };
 
   methods = {
     onRadioChange(e) {
       this.checkedIndex = e.detail.value;
-      this.$apply();
     },
     async tapChargeBtn() {
       //唤起微信支付功能
       //充值记录
       const chargeType = this.chargeTypes[this.checkedIndex];
       const { data } = await utils.post({
-        url: `${utils.urlPrefix}/chargeproducts`,
+        url: `${utils.urlPrefix}/chargerecords`,
         data: {
           chargeTypeId: chargeType.id
         }
@@ -250,7 +250,6 @@ export default class Charge extends wepy.page {
         session.user.balance += (chargeType.balance + (chargeType.bonusType ? chargeType.bonusType.price * utils.ratio : 0));
         wepy.setStorageSync('session', session);
         this.balance = session.user.balance;
-        this.$apply();
       }
     }
   };
@@ -259,12 +258,13 @@ export default class Charge extends wepy.page {
     wepy.showLoading({
       title: '拼命加载'
     });
-    const balanceRet = await utils.fetch({
+    const { data } = await utils.fetch({
       url: `${utils.urlPrefix}/userbalances`
     });
-    this.balance = balanceRet.data.result[0].balance;
+    this.balance = data.result[0].balance;
+    const chargeTypes = await this._loadChargeTypes();
+    this.chargeTypes = chargeTypes;
     this.$apply();
-    this._loadChargeTypes();
     wepy.hideLoading();
   }
 
@@ -272,13 +272,10 @@ export default class Charge extends wepy.page {
    * 加载充值产品列表
    */
   async _loadChargeTypes() {
-    let { data } = await utils.fetch({
+    const { data } = await utils.fetch({
       url: `${utils.urlPrefix}/chargetypes`
     });
-    if (data.result) {
-      this.chargeTypes = data.result;
-      this.$apply();
-    }
+    return data.result || [];
   }
 }
 </script>

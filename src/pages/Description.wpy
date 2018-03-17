@@ -1,0 +1,132 @@
+<style>
+.desc-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 35rpx 45rpx 35rpx;
+  background-color: white;
+}
+.desc-image {
+  width: 250rpx;
+  height: 350rpx;
+}
+.desc-title {
+  font-size: 23px;
+  margin-top: 0.5em;
+}
+.desc-artist {
+  font-size: 16px;
+  margin-top: 0.3em;
+  font-weight: 400;
+}
+.desc-content {
+  font-size: 14px;
+  margin-top: 1em;
+  font-weight: 350;
+}
+.rate-container {
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 25rpx 35rpx 25rpx 35rpx;
+  justify-content: space-between;
+}
+.rate-title {
+  font-size: 14px;
+  color: #474646;
+}
+.rate-star {
+  width: 15px;
+  height: 15px;
+}
+.read-btn {
+  background-color: #56b356;
+  font-size: 14px;
+  height: 130rpx;
+  width: 100%;
+  line-height: 130rpx;
+  text-align: center;
+  position: fixed;
+  bottom: 0px;
+  color: white;
+}
+.read-btn-hover {
+  background-color: hsl(120, 33%, 60%);
+}
+</style>
+
+<template lang='pug'>
+<view>
+  <view class='desc-container'>
+    <image wx:if='{{fiction.avatar}}' class='desc-image' mode='aspectFill' src='{{urlPrefix}}/statics/images/{{fiction.avatar}}'/>
+    <text class='desc-title'>{{fiction.title}}</text>
+    <text class='desc-artist'>{{fiction.artist}}</text>
+    <text class='desc-content'>{{fiction.description}}</text>
+  </view>
+  <view class='separate-line-20'/>
+  <view class='rate-container'>
+    <view class='rate-title'>小说评分</view>
+    <view>
+      <image class='rate-star' src='../resources/star.png'/>
+      <image class='rate-star' src='../resources/star.png'/>
+      <image class='rate-star' src='../resources/star.png'/>
+      <image class='rate-star' src='../resources/star.png'/>
+      <image class='rate-star' src='../resources/star.png'/>
+    </view>
+  </view>
+  <view class='read-btn' @tap.stop='tapRead' hover-class='read-btn-hover'>阅 读</view>
+</view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import utils from '@/utils/util';
+import moment from 'moment';
+export default class Description extends wepy.page {
+  config = {
+    navigationBarTitleText: '小说简介'
+  };
+
+  methods = {
+    tapRead() {
+      wepy.navigateTo({
+        url: './Read'
+      });
+    }
+  };
+
+  data = {
+    fiction: {},
+    urlPrefix: utils.urlPrefix
+  }
+
+  onShareAppMessage(options) {
+    const openid = wepy.getStorageSync('session').user.openid;
+    const timeStamp = moment(Date.now()).format('YYYY-MM-DDTHH:mm:ss.sss');
+    const ficId = this.$parent.globalData.ficId;
+    return {
+      path: `/pages/Description?fromOpenid=${openid}&shareDate=${timeStamp}&ficId=${ficId}`,
+      complete: res => {
+        this.$parent.globalData.onShareCallback(res);
+      }
+    };
+  }
+
+  async onLoad(query) {
+    //分享进入
+    if (query.ficId) {
+      const { data } = await utils.fetch({
+        url: `${utils.urlPrefix}/fictions?id=${query.ficId}`
+      });
+      const fiction = data.result[0];
+      this.fiction = fiction;
+      this.$parent.globalData.setRead(fiction.id, null, 1);
+    } else {
+      this.fiction = query;
+    }
+    this.$apply();
+  }
+}
+</script>
+

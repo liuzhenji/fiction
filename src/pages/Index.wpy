@@ -1,104 +1,121 @@
 <style>
 .index-container {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .classification-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-top: 55rpx;
-    padding: 15rpx 30rpx;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 55rpx;
+  padding: 15rpx 30rpx 30rpx 30rpx;
 }
 
 .classification-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .cls-item-image {
-    height: 46rpx;
-    width: 46rpx;
-    border-radius: 46rpx;
-    padding: 20rpx;
-    /* background-color: blueviolet; */
+  height: 46rpx;
+  width: 46rpx;
+  border-radius: 46rpx;
+  padding: 20rpx;
+  /* background-color: blueviolet; */
 }
 
 .cls-item-title {
-    color:rgb(73, 78, 78);
-    font-size:10px;
-    font-weight:500;
+  color:rgb(73, 78, 78);
+  font-size:10px;
+  font-weight:500;
 }
 
 .ad-container {
-    display: flex;
-    flex-direction: column;
-    padding: 0 30rpx;
+  display: flex;
+  flex-direction: column;
 }
 
 .ad-item-1 {
-    display: flex;
-    flex-direction: column;
-    padding: 15rpx 0;
+  display: flex;
+  flex-direction: column;
+  padding: 15rpx 30rpx;
 }
 
 .ad-item-1-image-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 15rpx 0;
+  width: 100%;
 }
 
-.index-image-large {
-    height: 300rpx;
-    width: 100%;
+.ad-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 15rpx 30rpx 15rpx 30rpx;
 }
 
-.index-image-small {
-    height: 150rpx;
-    width: 220rpx;
+.ad-item-hover {
+  background-color: #eee;
 }
 
-.ad-item-2 {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 15rpx 0;
+.ad-item-image {
+  width: 20%;
+  height: 200rpx;
 }
 
-.ad-item-2-left {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+.ad-item-content {
+  width: 80%;
+  height: 200rpx;
+  padding-left: 30rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
-.ad-item-tags {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin: 15rpx 0;
+.content-title {
+  font-size: 16px;
+}
+
+.content-artist {
+  color: #797777;
+  font-size: 14px;
 }
 
 .tag {
-    font-size: 9px;
-    color: white;
-    padding: 0em 0.2em 0.05em 0.2em;
-    border-radius: 0.3em;
-    background-color: rgb(180, 92, 217);
+  text-align: center;
+  font-size: 9px;
+  color: white;
+  padding: 0em 0.2em 0.05em 0.2em;
+  border-radius: 0.3em;
+  background-color: rgb(180, 92, 217);
+}
+
+.content-desc {
+  color: #8d8d8d;
+  font-size: 13px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .classification {
-    margin-left: 15rpx;
-    font-size: 12px;
-    color: rgb(86, 87, 104);
+  margin-left: 15rpx;
+  font-size: 12px;
+  color: rgb(86, 87, 104);
 }
 </style>
 
 <template lang='pug'>
 <view>
+  // 检查模式
   <view wx:if='{{checkMode}}' class='ad-container'>
     <view class='ad-item-1'>
       <repeat for='{{advertisers}}' key='{{index}}'>
@@ -116,7 +133,9 @@
     </view>
     <view class='separate-line-1'/>
   </view>
+  // 生产模式
   <view wx:else class='index-container'>
+    // 小说分类
     <view class='classification-container'>
       <repeat for='{{classifications}}' key='{{index}}'>
         <view @tap.stop='tapClassification({{item.id}})' class='classification-item'>
@@ -125,20 +144,17 @@
         </view>
       </repeat>
     </view>
-    <view class='separate-line-1'/>
+    // 小说精选
     <view class='ad-container'>
-      <repeat for='{{advertisers}}' key='{{index}}'>
-        <view @tap.stop='tapAd({{item.ficId}})' class='ad-item-1'>
-          <text>{{item.title}}</text>
-          <view class='ad-item-1-image-container'>
-              <image class='index-image-large' mode='aspectFill' src='{{urlPrefix}}/statics/images/{{item.imgs}}'/>
+      <repeat for='{{fictions}}' key='{{index}}' item='item'>
+        <view @tap.stop='tapFiction({{index}})' class='ad-item' hover-class='ad-item-hover'>
+          <image class='ad-item-image' mode='aspectFill' src='{{urlPrefix}}/statics/images/{{item.avatar}}'/>
+          <view class='ad-item-content'>
+            <text class='content-title'>{{item.title}}</text>
+            <text class='content-artist'>{{item.artist}}</text>
+            <text class='content-desc'>{{item.description}}</text>
           </view>
-          <view class='ad-item-tags'>
-            <view class='tag'>{{item.adTags}}</view>
-            <view class='classification'>{{item.clsTitle}}</view>
           </view>
-        </view>
-        <view class='separate-line-1'/>
       </repeat>
     </view>
   </view>
@@ -158,19 +174,17 @@ export default class Index extends wepy.page {
     randomColor: ['#ffadd2', '#ffa39e', '#ffbb96', '#ffd591', '#ffe58f', '#13c2c2', '#52c41a', '#a0d911', 'rgb(119, 218, 236)', 'rgb(121, 216, 143)'],
     classifications: null,
     advertisers: null,
+    fictions: null,
     urlPrefix: utils.urlPrefix
   }
 
   methods = {
-    tapAd(ficId) {
-      this.$parent.globalData.ficId = ficId;
-      this.$parent.globalData.serial = 1;
-      this.$parent.globalData.chapId = null;
-      if (this.checkMode) {
-        return;
-      }
+
+    tapFiction(index) {
+      const fiction = this.fictions[index];
+      this.$parent.globalData.setRead(fiction.id, null, 1);
       wepy.navigateTo({
-        url: './Read'
+        url: `./Description?avatar=${fiction.avatar}&title=${fiction.title}&artist=${fiction.artist}&description=${fiction.description}`
       });
     },
     tapClassification(clsId) {
@@ -178,21 +192,6 @@ export default class Index extends wepy.page {
         url: `./Fiction?clsId=${clsId}`
       });
     }
-  }
-
-  onLoad() {
-    this._init();
-  }
-
-  onPullDownRefresh() {
-    this._init();
-  }
-
-  async onReachBottom() {
-    let adRet = await this._loadAds(this.pageNum + 1, this.pageSize);
-    let ads = [...this.advertisers];
-    this.advertisers = ads.concat(adRet);
-    this.$apply();
   }
 
   onShareAppMessage(options) {
@@ -206,49 +205,66 @@ export default class Index extends wepy.page {
     };
   }
 
-  async _init() {
+  async onShow() {
     wepy.showLoading({
-      title: '加载中'
+      title: '疯狂加载'
     });
     const { data } = await utils.fetch({
       url: `${utils.urlPrefix}/systemconfigs/1`
     });
-    if (data) {
-      //非审核模式
-      if (data !== 1) {
-        this.checkMode = false;
-      }
-      await this._loadClses();
-      const adRet = await this._loadAds(1, this.pageSize);
-      if (adRet) {
-        this.advertisers = adRet;
-      }
-      this.$apply();
+    //非审核模式
+    if (!utils.doesCheckMode(data)) {
+      const clses = await this._loadClses();
+      const fictions = await this._loadFictions(1, this.pageSize);
+      this.fictions = [...fictions];
+      this.classifications = clses;
+      this.checkMode = false;
+    } else {
+      const ads = await this._loadAds(1, this.pageSize);
+      this.advertisers = [...ads];
+      this.checkMode = true;
     }
+    this.pageNum = 1;
+    this.$apply();
+    wepy.hideLoading();
+  }
+
+  async onReachBottom() {
+    wepy.showLoading({
+      title: '疯狂加载'
+    });
+    const nextPageNum = this.pageNum + 1;
+    this.pageNum = nextPageNum;
+    if (this.checkMode) {
+      const newAds = await this._loadAds(nextPageNum, this.pageSize);
+      this.advertisers = [...this.advertisers, ...newAds];
+    } else {
+      const newFics = await this._loadFictions(nextPageNum, this.pageSize);
+      this.fictions = [...this.fictions, ...newFics];
+    }
+    this.$apply();
     wepy.hideLoading();
   }
 
   async _loadClses() {
-    let { data } = await utils.fetch({
+    const { data } = await utils.fetch({
       url: `${utils.urlPrefix}/classifications`
     });
-    if (data.result) {
-      this.classifications = data.result;
-      this.$apply();
-    }
+    return data.result || [];
+  }
+
+  async _loadFictions(pageNum, pageSize) {
+    const { data } = await utils.fetch({
+      url: `${utils.urlPrefix}/fictions?pageNum=${pageNum}&pageSize=${pageSize}`
+    });
+    return data.result || [];
   }
 
   async _loadAds(pageNum, pageSize) {
-    const mode = this.checkMode ? 'check' : 'normal';
-    let { data } = await utils.fetch({
-      url: `${utils.urlPrefix}/ads?pageNum=${pageNum}&pageSize=${pageSize}&mode=${mode}`
+    const { data } = await utils.fetch({
+      url: `${utils.urlPrefix}/ads?pageNum=${pageNum}&pageSize=${pageSize}`
     });
-    if (data.result) {
-      this.pageNum = pageNum;
-      this.pageSize = pageSize;
-      this.$apply();
-      return data.result;
-    }
+    return data.result || [];
   }
 }
 </script>

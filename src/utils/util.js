@@ -68,6 +68,10 @@
     return _.assign(dist, merge);
   }
 
+  const doesCheckMode = code => {
+    return code === 1;
+  }
+
   //prod
   const urlPrefix = 'https://www.1jtec.com/fic';
   //dev
@@ -78,6 +82,7 @@
     post: post,
     convertO2O: convertO2O,
     urlPrefix: urlPrefix,
+    doesCheckMode,
     unit: UNIT_OF_MEASUREMENT,
     ratio: RMB_TO_KANDIAN_RATIO
   };
